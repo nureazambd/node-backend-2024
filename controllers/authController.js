@@ -2,22 +2,32 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 
-// Generate a JWT token
+// Helper function to generate JWT
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
-// Register a new user
+// @desc    Register a new user
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, address, password } = req.body;
+    
+    // Handle the profile picture upload
+    const profilePicture = req.file ? req.file.filename : null;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password });
+    // Create a new user with profilePicture
+    const user = await User.create({
+      name,
+      email,
+      address,
+      profilePicture, // Store profile picture path or filename
+      password,
+    });
 
     // Generate verification token
     const verificationToken = generateToken(user._id);
@@ -38,11 +48,6 @@ exports.register = async (req, res) => {
       message: 'User registered. A verification email has been sent to your email address.',
     });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      // Handle Mongoose validation errors
-      return res.status(400).json({ message: 'Validation error', error: error.errors });
-    }
-
     res.status(500).json({ message: 'Server Error', error });
   }
 };
@@ -90,6 +95,26 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user._id);
     res.status(200).json({ message: 'Login successful', token });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+// @desc    Get user profile
+// @route   GET /api/auth/profile
+// @access  Private (requires authentication)
+exports.getProfile = async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Return the user's profile information
+    res.status(200).json({
+      name: user.name,
+      email: user.email,
+      address: user.address,
+      profilePicture: user.profilePicture ? `http://localhost:5000/uploads/${user.profilePicture}` : null,
+      isVerified: user.isVerified,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error });
   }
