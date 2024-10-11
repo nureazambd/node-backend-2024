@@ -1,23 +1,10 @@
 const express = require('express');
-const { register, login, logout } = require('../controllers/authController');
-const multer = require('multer');
-const path = require('path');
+const { register, login, verifyEmail } = require('../controllers/authController');
 
 const router = express.Router();
 
-// Configure Multer for file uploads
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage });
-
-// Routes
-router.post('/register', upload.single('profilePicture'), register);
+router.post('/register', register);
 router.post('/login', login);
-router.get('/logout', logout);
+router.get('/verify-email/:token', verifyEmail);
 
 module.exports = router;
