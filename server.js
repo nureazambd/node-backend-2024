@@ -9,6 +9,7 @@ dotenv.config();
 
 // Ensure passport-github strategy is loaded
 require('./config/passportGitHub');
+require('./config/passportGoogle');
 
 connectDB();
 

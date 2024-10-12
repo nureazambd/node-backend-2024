@@ -10,8 +10,8 @@ router.get('/verify-email/:token', verifyEmail);
 router.post('/login', login);
 
 // Google OAuth
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), googleCallback);
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/' }), googleCallback);
 
 // GitHub OAuth
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
