@@ -1,27 +1,20 @@
 const express = require('express');
-const { register, login, verifyEmail, getProfile } = require('../controllers/authController');
-const { protect } = require('../middlewares/authMiddleware');
-const multer = require('multer');
-const path = require('path');
+const passport = require('passport');
+const { register, login, verifyEmail, googleCallback, githubCallback } = require('../controllers/authController');
 
 const router = express.Router();
 
-// Configure Multer for profile picture uploads
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage });
-
-// Routes
-router.post('/register', upload.single('profilePicture'), register);
-router.post('/login', login);
+// Email registration and verification
+router.post('/register', register);
 router.get('/verify-email/:token', verifyEmail);
+router.post('/login', login);
 
-// Profile route (protected)
-router.get('/profile', protect, getProfile); // Protected route to get profile
+// Google OAuth
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), googleCallback);
+
+// GitHub OAuth
+router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/' }), githubCallback);
 
 module.exports = router;
