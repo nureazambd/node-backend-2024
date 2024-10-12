@@ -11,10 +11,11 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if GitHub profile contains emails, and handle missing emails
-        const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : `user-${profile.id}@noemail.com`; // Fallback to default email if none provided
-        // const name = profile.displayName ? profile.displayName : '';
-        console.log("github user info:", profile)
+        // Check if GitHub profile contains an email, otherwise provide a fallback
+        const email = profile.emails && profile.emails.length > 0
+          ? profile.emails[0].value
+          : `user-${profile.id}@noemail.com`;  // Fallback email
+
         // Check if the user already exists in the database
         const existingUser = await User.findOne({ githubId: profile.id });
         if (existingUser) {
@@ -24,9 +25,9 @@ passport.use(
         // If the user does not exist, create a new user
         const newUser = await User.create({
           githubId: profile.id,
-          name: profile.username,
-          email: email,  // Use the email from GitHub or fallback email
-          isVerified: true,  // Automatically verify GitHub users
+          name: profile.displayName,
+          email: email,  // Use real email or fallback
+          isVerified: true,  // Automatically mark GitHub users as verified
         });
 
         return done(null, newUser);
@@ -37,15 +38,11 @@ passport.use(
   )
 );
 
-// Serialize user into the session
+// Serialize the user to the session
 passport.serializeUser((user, done) => done(null, user.id));
 
-// Deserialize user from the session
+// Deserialize the user by looking them up from the session
 passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (error) {
-    done(error, null);
-  }
+  const user = await User.findById(id);
+  done(null, user);
 });
