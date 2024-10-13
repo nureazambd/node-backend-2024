@@ -13,12 +13,21 @@ exports.register = async (req, res) => {
   try {
     const { name, email, address, password } = req.body;
 
+     // Handle the profile picture upload
+     const profilePicture = req.file ? req.file.filename : null;
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, address, password });
+    const user = await User.create({ 
+      name,
+      email,
+      address,
+      profilePicture, // Store profile picture path or filename
+      password,
+     });
 
     // Generate verification token
     const verificationToken = generateToken(user._id);
@@ -77,6 +86,47 @@ exports.login = async (req, res) => {
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+// Get profile
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.status(200).json({ name: user.name, email: user.email, address: user.address, profilePicture: user.profilePicture });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.name = req.body.name || user.name;
+    user.address = req.body.address || user.address;
+    if (req.file) user.profilePicture = `/uploads/${req.file.filename}`;
+
+    await user.save();
+    res.status(200).json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Delete user
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
