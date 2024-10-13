@@ -137,5 +137,5 @@ exports.googleCallback = (req, res) => {
 
 // GitHub OAuth callback
 exports.githubCallback = (req, res) => {
-  res.redirect('/profile'); // Redirect after successful GitHub login
+  res.redirect('/'); // Redirect after successful GitHub login
 };

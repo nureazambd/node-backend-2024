@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String }, // Not required for OAuth users
   address: { type: String, },
   profilePicture: { type: String }, // New profile picture field
   googleId: { type: String }, // For Google OAuth
